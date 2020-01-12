@@ -3,8 +3,11 @@ var sass = require('gulp-sass');
 var header = require('gulp-header');
 var cleanCSS = require('gulp-clean-css');
 var rename = require("gulp-rename");
+var uglify = require('gulp-uglify');
 var pkg = require('./package.json');
 var browserSync = require('browser-sync').create();
+var gutil = require('gulp-util')
+
 
 // Set the banner content
 var banner = ['/*!\n',
@@ -16,7 +19,7 @@ var banner = ['/*!\n',
 ].join('');
 
 // Copy third party libraries from /node_modules into /vendor
-gulp.task('vendor', function() {
+gulp.task('vendor', done => {
 
   // Bootstrap
   gulp.src([
@@ -60,19 +63,23 @@ gulp.task('vendor', function() {
     ])
     .pipe(gulp.dest('./vendor/simple-line-icons/css'))
 
+  done();
+
 });
 
 // Compile SCSS
-gulp.task('css:compile', function() {
+gulp.task('css:compile', function () {
   return gulp.src('./scss/**/*.scss')
     .pipe(sass.sync({
       outputStyle: 'expanded'
-    }).on('error', sass.logError))
+    }).on('error', function (err) {
+      gutil.log(gutil.colors.red('[Error]'), err.toString());
+    }))
     .pipe(gulp.dest('./css'))
 });
 
 // Minify CSS
-gulp.task('css:minify', ['css:compile'], function() {
+gulp.task('css:minify', gulp.series('css:compile', function () {
   return gulp.src([
       './css/*.css',
       '!./css/*.min.css'
@@ -83,16 +90,37 @@ gulp.task('css:minify', ['css:compile'], function() {
     }))
     .pipe(gulp.dest('./css'))
     .pipe(browserSync.stream());
-});
+}));
 
 // CSS
-gulp.task('css', ['css:compile', 'css:minify']);
+gulp.task('css', gulp.series('css:compile', 'css:minify'));
+
+// Minify JavaScript
+gulp.task('js:minify', function () {
+  return gulp.src(['./js/*.js', '!./js/*.min.js', '!./js/google*'])
+    .pipe(uglify()
+      .on('error', function (err) {
+        gutil.log(gutil.colors.red('[Error]'), err.toString());
+      })
+    )
+    .pipe(rename({
+      suffix: '.min'
+    }))
+    .pipe(header(banner, {
+      pkg: pkg
+    }))
+    .pipe(gulp.dest('./js'))
+    .pipe(browserSync.stream());
+});
+
+// JS
+gulp.task('js', gulp.series('js:minify'));
 
 // Default task
-gulp.task('default', ['css', 'vendor']);
+gulp.task('default', gulp.series('css', 'js', 'vendor'));
 
 // Configure the browserSync task
-gulp.task('browserSync', function() {
+gulp.task('browserSync', function () {
   browserSync.init({
     server: {
       baseDir: "./"
@@ -101,7 +129,8 @@ gulp.task('browserSync', function() {
 });
 
 // Dev task
-gulp.task('dev', ['css', 'browserSync'], function() {
+gulp.task('dev', gulp.series('vendor', 'css', 'js', 'browserSync', function () {
   gulp.watch('./scss/*.scss', ['css']);
+  gulp.watch('./js/*.js', ['js']);
   gulp.watch('./*.html', browserSync.reload);
-});
+}));

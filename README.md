@@ -2,6 +2,8 @@
 
 Welcome to the open source repo for [our web site](https://www.autonomouslogistics.co). We strongly believe in the value of open source and sharing knowledge that has common value. Feel free to dig around in our code and see how we've modified a free template from Start Bootstrap.
 
+Site version: v1.0.0
+
 ## Building the Site
 
 To rebuild the site from scratch and serve up live changes in dev mode, we use [Gulp](https://gulpjs.com/):

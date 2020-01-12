@@ -2,7 +2,7 @@
 
 Welcome to the open source repo for [our web site](https://www.autonomouslogistics.co). We strongly believe in the value of open source and sharing knowledge that has common value. Feel free to dig around in our code and see how we've modified a free template from Start Bootstrap.
 
-Site version: v1.0.0
+Site version: v2.0.0
 
 ## Building the Site
 
